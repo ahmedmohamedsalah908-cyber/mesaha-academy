@@ -77,6 +77,7 @@ fun ProfileScreen(
     email: String,
     fallbackName: String,
     isCloudSignedIn: Boolean = true,
+    cloudSyncAvailable: Boolean = true,
     onUpdateProfile: (fullName: String, studentCode: String, department: String, phone: String?) -> Unit,
     onOpenAdmin: () -> Unit,
     onGoogleSignIn: () -> Unit = {},
@@ -399,35 +400,41 @@ fun ProfileScreen(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Text(
-                                text = "المزامنة السحابية (اختياري)",
+                                text = if (cloudSyncAvailable) "المزامنة السحابية (اختياري)" else "الحفظ المحلي التلقائي مفعل",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "جميع دروسك وتقدمك ودرجاتك محفوظة الآن على جهازك تلقائياً دون الحاجة لتسجيل الدخول. يمكنك ربط حسابك في Google لاحقاً لمزامنة بياناتك عبر السحابة.",
+                                text = if (cloudSyncAvailable) {
+                                    "جميع دروسك وتقدمك ودرجاتك محفوظة الآن على جهازك تلقائياً دون الحاجة لتسجيل الدخول. يمكنك ربط حسابك في Google لاحقاً لمزامنة بياناتك عبر السحابة."
+                                } else {
+                                    "جميع دروسك وتقدمك ودرجاتك وتعديلات لوحة المدير محفوظة تلقائياً على جهازك وتعمل بدون إنترنت ودون الحاجة لتسجيل دخول."
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Button(
-                                onClick = onGoogleSignIn,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                                    .testTag("profile_google_sign_in_button"),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = EmeraldDark,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Icon(Icons.Filled.Person, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "تسجيل الدخول بحساب Google للمزامنة",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            if (cloudSyncAvailable) {
+                                Button(
+                                    onClick = onGoogleSignIn,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp)
+                                        .testTag("profile_google_sign_in_button"),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = EmeraldDark,
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    Icon(Icons.Filled.Person, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "تسجيل الدخول بحساب Google للمزامنة",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }

@@ -85,6 +85,7 @@ import com.example.viewmodel.AcademyDashboardState
 import com.example.viewmodel.AcademyViewModel
 import com.example.viewmodel.LocalAcademyViewModel
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -119,12 +120,26 @@ private data class NavTabItem(
  *   AuthenticatedAcademyShell keyed by uid.
  */
 @Composable
-fun AppNavigation(auth: FirebaseAuth = Firebase.auth) {
+fun AppNavigation() {
+    val context = LocalContext.current
+    val auth: FirebaseAuth? = remember(context) {
+        try {
+            if (FirebaseApp.getApps(context).isNotEmpty()) Firebase.auth else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    if (auth == null) {
+        LocalAcademyShell(cloudSyncAvailable = false)
+        return
+    }
+
     val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
     val user = currentUser
 
     if (user == null) {
-        LocalAcademyShell()
+        LocalAcademyShell(cloudSyncAvailable = true)
     } else {
         key(user.uid) {
             AuthenticatedAcademyShell(
@@ -139,7 +154,7 @@ fun AppNavigation(auth: FirebaseAuth = Firebase.auth) {
 }
 
 @Composable
-private fun LocalAcademyShell() {
+private fun LocalAcademyShell(cloudSyncAvailable: Boolean) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val credentialManager = remember(context) { CredentialManager.create(context) }
@@ -171,6 +186,7 @@ private fun LocalAcademyShell() {
         email = "",
         fallbackName = state.profile?.fullName ?: "طالب الفرقة الأولى",
         isCloudSignedIn = false,
+        cloudSyncAvailable = cloudSyncAvailable,
         onToggleLessonCompleted = { lesson, done -> viewModel.toggleLessonCompleted(lesson, done) },
         onSubmitExam = { exam, score, total, onSaved -> viewModel.submitExamAttempt(exam, score, total, onSaved) },
         onUpdateProfile = { name, code, dept, phone -> viewModel.saveStudentProfile(name, code, dept, phone) },
@@ -263,6 +279,7 @@ private fun AuthenticatedAcademyShell(
         email = currentUserEmail,
         fallbackName = displayName,
         isCloudSignedIn = true,
+        cloudSyncAvailable = true,
         onToggleLessonCompleted = { lesson, done -> viewModel.toggleLessonCompleted(lesson, done) },
         onSubmitExam = { exam, score, total, onSaved -> viewModel.submitExamAttempt(exam, score, total, onSaved) },
         onUpdateProfile = { name, code, dept, phone ->
@@ -297,6 +314,7 @@ private fun AcademyMainScaffold(
     email: String,
     fallbackName: String,
     isCloudSignedIn: Boolean,
+    cloudSyncAvailable: Boolean,
     onToggleLessonCompleted: (Lesson, Boolean) -> Unit,
     onSubmitExam: (Exam, Int, Int, (ExamResult) -> Unit) -> Unit,
     onUpdateProfile: (String, String, String, String?) -> Unit,
@@ -523,6 +541,7 @@ private fun AcademyMainScaffold(
                                 email = email,
                                 fallbackName = fallbackName,
                                 isCloudSignedIn = isCloudSignedIn,
+                                cloudSyncAvailable = cloudSyncAvailable,
                                 onUpdateProfile = onUpdateProfile,
                                 onOpenAdmin = { navigateTopLevel(AcademyRoutes.ADMIN) },
                                 onGoogleSignIn = onGoogleSignIn,
