@@ -1,0 +1,296 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny everything not explicitly authorized
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL PRIMITIVE HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+             'email' in request.auth.token &&
+             'email_verified' in request.auth.token &&
+             request.auth.token.email == 'ahmedmohamedsalah908@gmail.com' &&
+             request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() ||
+             (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // --- ENTITY VALIDATION BLUEPRINTS ---
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 80 &&
+             data.email is string && data.email.size() <= 120 &&
+             data.studentCode is string && data.studentCode.size() <= 30 &&
+             data.department is string && data.department.size() <= 100 &&
+             (!('phone' in data) || data.phone == null || (data.phone is string && data.phone.size() <= 25)) &&
+             (!('photoUrl' in data) || data.photoUrl == null || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLessonProgress(data) {
+      return data.subjectId is string && isValidId(data.subjectId) &&
+             data.lessonId is string && isValidId(data.lessonId) &&
+             data.lessonTitle is string && data.lessonTitle.size() >= 1 && data.lessonTitle.size() <= 140 &&
+             data.completed is bool &&
+             data.completedAt is timestamp && data.completedAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidExamResult(data) {
+      return data.examId is string && isValidId(data.examId) &&
+             data.examTitle is string && data.examTitle.size() >= 1 && data.examTitle.size() <= 140 &&
+             data.subjectId is string && isValidId(data.subjectId) &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 100 &&
+             data.score is int && data.score >= 0 && data.score <= 1000 &&
+             data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 1000 &&
+             data.score <= data.totalQuestions &&
+             data.percentage is int && data.percentage >= 0 && data.percentage <= 100 &&
+             data.passed is bool &&
+             data.status == 'completed' &&
+             data.submittedAt is timestamp && data.submittedAt <= request.time;
+    }
+
+    function isValidSubject(data) {
+      return data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+             data.code is string && data.code.size() >= 2 && data.code.size() <= 24 &&
+             data.description is string && data.description.size() >= 2 && data.description.size() <= 500 &&
+             data.instructor is string && data.instructor.size() >= 2 && data.instructor.size() <= 100 &&
+             data.iconKey is string && data.iconKey.size() >= 1 && data.iconKey.size() <= 40 &&
+             data.orderIndex is int && data.orderIndex >= 0 && data.orderIndex <= 500 &&
+             data.published is bool &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLesson(data) {
+      return data.subjectId is string && isValidId(data.subjectId) &&
+             data.title is string && data.title.size() >= 2 && data.title.size() <= 140 &&
+             data.summary is string && data.summary.size() >= 2 && data.summary.size() <= 400 &&
+             data.contentText is string && data.contentText.size() >= 5 && data.contentText.size() <= 15000 &&
+             (!('imageKey' in data) || data.imageKey == null || (data.imageKey is string && data.imageKey.size() <= 500)) &&
+             (!('videoTitle' in data) || data.videoTitle == null || (data.videoTitle is string && data.videoTitle.size() <= 140)) &&
+             (!('videoUrl' in data) || data.videoUrl == null || (data.videoUrl is string && data.videoUrl.size() <= 500)) &&
+             (!('pdfTitle' in data) || data.pdfTitle == null || (data.pdfTitle is string && data.pdfTitle.size() <= 140)) &&
+             (!('pdfUrl' in data) || data.pdfUrl == null || (data.pdfUrl is string && data.pdfUrl.size() <= 500)) &&
+             data.durationMinutes is int && data.durationMinutes >= 1 && data.durationMinutes <= 600 &&
+             data.orderIndex is int && data.orderIndex >= 0 && data.orderIndex <= 500 &&
+             data.published is bool &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidExam(data) {
+      return data.subjectId is string && isValidId(data.subjectId) &&
+             data.subjectName is string && data.subjectName.size() >= 2 && data.subjectName.size() <= 100 &&
+             data.title is string && data.title.size() >= 2 && data.title.size() <= 140 &&
+             (!('description' in data) || data.description == null || (data.description is string && data.description.size() <= 400)) &&
+             data.durationMinutes is int && data.durationMinutes >= 1 && data.durationMinutes <= 240 &&
+             data.passingScorePercent is int && data.passingScorePercent >= 1 && data.passingScorePercent <= 100 &&
+             data.questions is list && data.questions.size() >= 1 && data.questions.size() <= 30 &&
+             data.questions[0] is map &&
+             data.published is bool &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAdminEntry(data) {
+      return data.email is string && data.email.size() >= 3 && data.email.size() <= 120 &&
+             data.grantedBy is string && data.grantedBy.size() >= 1 && data.grantedBy.size() <= 128 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // --- 1. USERS & PRIVATE STUDENT PROGRESS ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'fullName', 'email', 'studentCode', 'department', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'fullName', 'email', 'studentCode', 'department', 'phone', 'photoUrl', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt && (
+                         (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'email', 'studentCode', 'department', 'phone', 'photoUrl', 'updatedAt'])) ||
+                         (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'studentCode', 'department', 'phone', 'updatedAt']))
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Student Lesson Progress Subcollection
+      match /lessonProgress/{lessonId} {
+        allow get: if isOwner(userId) && isValidId(lessonId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(lessonId) &&
+                         incoming().lessonId == lessonId &&
+                         incoming().keys().hasAll(['subjectId', 'lessonId', 'lessonTitle', 'completed', 'completedAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['subjectId', 'lessonId', 'lessonTitle', 'completed', 'completedAt', 'updatedAt']) &&
+                         isValidLessonProgress(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(lessonId) &&
+                         isValidLessonProgress(incoming()) &&
+                         incoming().subjectId == existing().subjectId &&
+                         incoming().lessonId == existing().lessonId &&
+                         incoming().completedAt == existing().completedAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['lessonTitle', 'completed', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(lessonId);
+      }
+
+      // Student Exam Results Subcollection
+      match /examResults/{resultId} {
+        allow get: if isSignedIn() && isValidId(resultId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(resultId) &&
+                         incoming().keys().hasAll(['examId', 'examTitle', 'subjectId', 'subjectName', 'score', 'totalQuestions', 'percentage', 'passed', 'status', 'submittedAt']) &&
+                         incoming().keys().hasOnly(['examId', 'examTitle', 'subjectId', 'subjectName', 'score', 'totalQuestions', 'percentage', 'passed', 'status', 'submittedAt']) &&
+                         isValidExamResult(incoming());
+
+        // Terminal state locked for students; admin override allowed for grade correction
+        allow update: if isSignedIn() &&
+                         isValidId(resultId) &&
+                         isValidExamResult(incoming()) &&
+                         isAdmin() &&
+                         existing().status == 'completed' &&
+                         incoming().examId == existing().examId &&
+                         incoming().subjectId == existing().subjectId &&
+                         incoming().submittedAt == existing().submittedAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['score', 'percentage', 'passed']);
+
+        allow delete: if isOwner(userId) && isValidId(resultId);
+      }
+    }
+
+    // --- 2. ACADEMIC SUBJECTS ---
+    match /subjects/{subjectId} {
+      allow get: if isSignedIn() && isValidId(subjectId) && (existing().published == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.published == true || isBootstrappedAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(subjectId) &&
+                       isValidSubject(incoming()) &&
+                       incoming().createdBy == request.auth.uid &&
+                       incoming().keys().hasAll(['name', 'code', 'description', 'instructor', 'iconKey', 'orderIndex', 'published', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['name', 'code', 'description', 'instructor', 'iconKey', 'orderIndex', 'published', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       isAdmin();
+
+      allow update: if isSignedIn() &&
+                       isValidId(subjectId) &&
+                       isValidSubject(incoming()) &&
+                       incoming().createdBy == existing().createdBy &&
+                       incoming().createdAt == existing().createdAt &&
+                       isAdmin() &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'code', 'description', 'instructor', 'iconKey', 'orderIndex', 'published', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(subjectId) && isAdmin();
+    }
+
+    // --- 3. LESSONS (TEXT, IMAGES, VIDEOS, PDFS) ---
+    match /lessons/{lessonId} {
+      allow get: if isSignedIn() && isValidId(lessonId) && (existing().published == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.published == true || isBootstrappedAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(lessonId) &&
+                       isValidLesson(incoming()) &&
+                       incoming().createdBy == request.auth.uid &&
+                       incoming().keys().hasAll(['subjectId', 'title', 'summary', 'contentText', 'durationMinutes', 'orderIndex', 'published', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['subjectId', 'title', 'summary', 'contentText', 'imageKey', 'videoTitle', 'videoUrl', 'pdfTitle', 'pdfUrl', 'durationMinutes', 'orderIndex', 'published', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       isAdmin() &&
+                       exists(/databases/$(database)/documents/subjects/$(incoming().subjectId));
+
+      allow update: if isSignedIn() &&
+                       isValidId(lessonId) &&
+                       isValidLesson(incoming()) &&
+                       incoming().createdBy == existing().createdBy &&
+                       incoming().createdAt == existing().createdAt &&
+                       isAdmin() &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['subjectId', 'title', 'summary', 'contentText', 'imageKey', 'videoTitle', 'videoUrl', 'pdfTitle', 'pdfUrl', 'durationMinutes', 'orderIndex', 'published', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(lessonId) && isAdmin();
+    }
+
+    // --- 4. EXAMS (MULTIPLE CHOICE) ---
+    match /exams/{examId} {
+      allow get: if isSignedIn() && isValidId(examId) && (existing().published == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.published == true || isBootstrappedAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(examId) &&
+                       isValidExam(incoming()) &&
+                       incoming().createdBy == request.auth.uid &&
+                       incoming().keys().hasAll(['subjectId', 'subjectName', 'title', 'durationMinutes', 'passingScorePercent', 'questions', 'published', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['subjectId', 'subjectName', 'title', 'description', 'durationMinutes', 'passingScorePercent', 'questions', 'published', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       isAdmin() &&
+                       exists(/databases/$(database)/documents/subjects/$(incoming().subjectId));
+
+      allow update: if isSignedIn() &&
+                       isValidId(examId) &&
+                       isValidExam(incoming()) &&
+                       incoming().createdBy == existing().createdBy &&
+                       incoming().createdAt == existing().createdAt &&
+                       isAdmin() &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['subjectId', 'subjectName', 'title', 'description', 'durationMinutes', 'passingScorePercent', 'questions', 'published', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(examId) && isAdmin();
+    }
+
+    // --- 5. TRUSTED ADMINS REGISTRY ---
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && isValidId(adminUid) && (request.auth.uid == adminUid || isBootstrappedAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      allow create: if isSignedIn() &&
+                       isValidId(adminUid) &&
+                       isValidAdminEntry(incoming()) &&
+                       incoming().grantedBy == request.auth.uid &&
+                       incoming().keys().hasAll(['email', 'grantedBy', 'createdAt']) &&
+                       incoming().keys().hasOnly(['email', 'grantedBy', 'createdAt']) &&
+                       isBootstrappedAdmin();
+
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(adminUid) && isBootstrappedAdmin();
+    }
+  }
+}

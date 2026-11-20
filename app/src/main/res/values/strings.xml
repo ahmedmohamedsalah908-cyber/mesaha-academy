@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">أكاديمية المساحة</string>
+    <string name="academy_subtitle">الفرقة الأولى • معهد المساحة</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_subjects">المواد</string>
+    <string name="nav_exams">الامتحانات</string>
+    <string name="nav_profile">ملفي</string>
+    <string name="nav_admin">المدير</string>
+    <string name="action_sign_in_google">تسجيل الدخول بحساب Google</string>
+    <string name="action_sign_out">تسجيل الخروج</string>
+</resources>

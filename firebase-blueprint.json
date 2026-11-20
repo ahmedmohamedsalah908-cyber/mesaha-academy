@@ -1,0 +1,422 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Student or admin profile for Mesaha Academy.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID matching the document ID."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Student full Arabic name (2-80 chars)."
+        },
+        "email": {
+          "type": "string",
+          "description": "Student email address."
+        },
+        "studentCode": {
+          "type": "string",
+          "description": "Institute student ID / seat number."
+        },
+        "department": {
+          "type": "string",
+          "description": "Academic department and year."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Optional phone number."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "Optional profile avatar URL."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "fullName",
+        "email",
+        "studentCode",
+        "department",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LessonProgress": {
+      "title": "LessonProgress",
+      "description": "Tracks a student's completion state for an individual lesson.",
+      "type": "object",
+      "properties": {
+        "subjectId": {
+          "type": "string",
+          "description": "Parent subject document ID."
+        },
+        "lessonId": {
+          "type": "string",
+          "description": "Lesson document ID matching this progress document ID."
+        },
+        "lessonTitle": {
+          "type": "string",
+          "description": "Snapshot of the lesson title."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the student completed the lesson."
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "subjectId",
+        "lessonId",
+        "lessonTitle",
+        "completed",
+        "completedAt",
+        "updatedAt"
+      ]
+    },
+    "ExamResult": {
+      "title": "ExamResult",
+      "description": "Recorded score for a completed student exam attempt.",
+      "type": "object",
+      "properties": {
+        "examId": {
+          "type": "string",
+          "description": "Exam document ID."
+        },
+        "examTitle": {
+          "type": "string",
+          "description": "Exam title."
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Subject document ID."
+        },
+        "subjectName": {
+          "type": "string",
+          "description": "Subject display name."
+        },
+        "score": {
+          "type": "integer",
+          "description": "Number of correct answers."
+        },
+        "totalQuestions": {
+          "type": "integer",
+          "description": "Total number of questions in the exam."
+        },
+        "percentage": {
+          "type": "integer",
+          "description": "Percentage grade (0-100)."
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether the student met the passing threshold."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed"],
+          "description": "Terminal status of the exam attempt."
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "examId",
+        "examTitle",
+        "subjectId",
+        "subjectName",
+        "score",
+        "totalQuestions",
+        "percentage",
+        "passed",
+        "status",
+        "submittedAt"
+      ]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "First-year surveying academic subject.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Arabic subject name."
+        },
+        "code": {
+          "type": "string",
+          "description": "Course code (e.g. SURV-101)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of course objectives."
+        },
+        "instructor": {
+          "type": "string",
+          "description": "Course instructor name."
+        },
+        "iconKey": {
+          "type": "string",
+          "description": "Semantic icon identifier for UI rendering."
+        },
+        "orderIndex": {
+          "type": "integer",
+          "description": "Display sort order."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Visibility flag for student catalog queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Admin UID who created the subject."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "name",
+        "code",
+        "description",
+        "instructor",
+        "iconKey",
+        "orderIndex",
+        "published",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "Educational lesson inside a subject with text, illustration, video, and PDF.",
+      "type": "object",
+      "properties": {
+        "subjectId": {
+          "type": "string",
+          "description": "Parent subject document ID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Lesson title."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Short Arabic overview of the lesson."
+        },
+        "contentText": {
+          "type": "string",
+          "description": "Full structured textual lesson explanation."
+        },
+        "imageKey": {
+          "type": "string",
+          "description": "Optional bundled drawable key or HTTPS image URL."
+        },
+        "videoTitle": {
+          "type": "string",
+          "description": "Optional video lecture title."
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "Optional external video URL."
+        },
+        "pdfTitle": {
+          "type": "string",
+          "description": "Optional PDF study guide title."
+        },
+        "pdfUrl": {
+          "type": "string",
+          "description": "Optional external PDF URL (falls back to on-device PDF generation)."
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "description": "Estimated study duration in minutes."
+        },
+        "orderIndex": {
+          "type": "integer",
+          "description": "Lesson order within the subject."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Visibility flag for student catalog queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Admin UID who created the lesson."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "subjectId",
+        "title",
+        "summary",
+        "contentText",
+        "durationMinutes",
+        "orderIndex",
+        "published",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Multiple-choice exam for a surveying subject.",
+      "type": "object",
+      "properties": {
+        "subjectId": {
+          "type": "string",
+          "description": "Parent subject document ID."
+        },
+        "subjectName": {
+          "type": "string",
+          "description": "Subject display name."
+        },
+        "title": {
+          "type": "string",
+          "description": "Exam title."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional exam instructions."
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "description": "Allowed time in minutes."
+        },
+        "passingScorePercent": {
+          "type": "integer",
+          "description": "Minimum passing score percentage."
+        },
+        "questions": {
+          "type": "array",
+          "description": "Bounded list of 1 to 30 multiple-choice question maps."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Visibility flag for student catalog queries."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Admin UID who created the exam."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "subjectId",
+        "subjectName",
+        "title",
+        "durationMinutes",
+        "passingScorePercent",
+        "questions",
+        "published",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminEntry": {
+      "title": "AdminEntry",
+      "description": "Trusted administrator grant record.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Admin email address."
+        },
+        "grantedBy": {
+          "type": "string",
+          "description": "UID of the admin who granted access."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "email",
+        "grantedBy",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private student/admin profile documents isolated by UID."
+    },
+    "/users/{userId}/lessonProgress/{lessonId}": {
+      "schema": { "$ref": "#/entities/LessonProgress" },
+      "description": "Per-student lesson completion records."
+    },
+    "/users/{userId}/examResults/{resultId}": {
+      "schema": { "$ref": "#/entities/ExamResult" },
+      "description": "Per-student completed exam scores and history."
+    },
+    "/subjects/{subjectId}": {
+      "schema": { "$ref": "#/entities/Subject" },
+      "description": "Academic subjects managed by admins and read by signed-in students."
+    },
+    "/lessons/{lessonId}": {
+      "schema": { "$ref": "#/entities/Lesson" },
+      "description": "Subject lessons with text, diagrams, video links, and PDF guides."
+    },
+    "/exams/{examId}": {
+      "schema": { "$ref": "#/entities/Exam" },
+      "description": "MCQ exams managed by admins and taken by signed-in students."
+    },
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminEntry" },
+      "description": "Trusted admin role registry."
+    }
+  }
+}

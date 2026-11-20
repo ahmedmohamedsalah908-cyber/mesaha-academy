@@ -1,0 +1,6 @@
+{
+  "name": "أكاديمية المساحة",
+  "description": "تطبيق تعليمي متكامل باللغة العربية لطلاب الفرقة الأولى بمعهد المساحة يضم المواد الدراسية والدروس والامتحانات ولوحة تحكم المدير.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
